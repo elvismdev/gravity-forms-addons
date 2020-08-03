@@ -2349,8 +2349,32 @@ class GFDirectory {
 			}
 		}
 
+		// Avoid compact() notices on PHP 7.3+.
+		$compact_vars = array(
+			"approved", 
+			"sort_field_number", 
+			"sort_direction", 
+			"search_query", 
+			"search_criteria", 
+			"first_item_index", 
+			"page_size", 
+			"star", 
+			"read", 
+			"is_numeric", 
+			"start_date", 
+			"end_date", 
+			"status", 
+			"approvedcolumn", 
+			"limituser"
+		);
+		foreach ( $compact_vars as $key => $value ) {
+			if ( !isset( ${$value} ) ) {
+				unset( $compact_vars[$key] );
+			}
+		}
+
 		// Used by at least the show_only_user_entries() method
-		$return = apply_filters( 'kws_gf_directory_lead_filter', $return, compact( "approved", "sort_field_number", "sort_direction", "search_query", "search_criteria", "first_item_index", "page_size", "star", "read", "is_numeric", "start_date", "end_date", "status", "approvedcolumn", "limituser" ) );
+		$return = apply_filters( 'kws_gf_directory_lead_filter', $return, compact( $compact_vars ) );
 
 		return $return;
 	}
