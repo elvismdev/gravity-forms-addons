@@ -5,7 +5,7 @@ add_action('init', array('GFDirectory_EditForm', 'initialize'));
 class GFDirectory_EditForm {
 
 	static public function initialize() {
-		$GFDirectory_EditForm = new GFDirectory_EditForm();
+		new self;
 	}
 
 	function __construct() {
@@ -16,10 +16,16 @@ class GFDirectory_EditForm {
 
 			add_filter('admin_head', array(&$this,'directory_admin_head'));
 
-			if( isset($_REQUEST['id'] ) ) {
+			if( isset($_REQUEST['id'] ) || self::is_gravity_page('gf_entries') ) {
 				add_filter('gform_tooltips', array(&$this, 'directory_tooltips')); //Filter to add a new tooltip
 				add_action("gform_editor_js", array(&$this, "editor_script")); //Action to inject supporting script to the form editor page
-				add_action("admin_head", array(&$this, "toolbar_links")); //Action to inject supporting script to the form editor page
+
+				// No need to add via JS any more.
+				if( class_exists( 'GFForms' ) && version_compare( GFForms::$version, '2.0', '>=' ) ) {
+					add_filter( 'gform_toolbar_menu', array( $this, 'toolbar_menu_item' ), 10, 2 );
+				} else {
+					add_action("admin_head", array(&$this, "toolbar_links")); //Action to inject supporting script to the form editor page
+				}
 				add_action("gform_field_advanced_settings", array(&$this,"use_as_entry_link_settings"), 10, 2);
 				add_filter("gform_add_field_buttons", array(&$this,"add_field_buttons"));
 				add_action('gform_editor_js_set_default_values', array(&$this,'directory_add_default_values'));
@@ -30,11 +36,11 @@ class GFDirectory_EditForm {
 	// From gravityforms.php
 	public static function process_exterior_pages(){
 		if(rgempty("gf_page", $_GET))
-            return;
+            {return;}
 
         //ensure users are logged in
         if(!is_user_logged_in())
-            auth_redirect();
+            {auth_redirect();}
 
         switch(rgget("gf_page")){
             case "directory_columns" :
@@ -79,6 +85,7 @@ class GFDirectory_EditForm {
 
 				field.choices = null;
 		        field.inputs = null;
+		        field.gf_directory_approval = true;
 
 		        if(!field.choices)
 		            field.choices = new Array(new Choice("<?php echo esc_js( __("Approved", "gravity-forms-addons")); ?>"));
@@ -96,19 +103,25 @@ class GFDirectory_EditForm {
 	}
 
 	public function directory_admin_head() {
-		global $_gform_directory_approvedcolumn, $process_bulk_update_message;
+		global $process_bulk_update_message;
 
 		// Entries screen shows first form's entries by default, if not specified
 		if( isset( $_GET['id'] ) ) {
-			$formID = $_GET['id'];
+			$formID = intval( $_GET['id'] );
 		} else {
 			if( class_exists('RGFormsModel') ) {
-				$forms = RGFormsModel::get_forms(null, "title");
+				$forms = RGFormsModel::get_forms(NULL, "title");
 				$formID = $forms[0]->id;
 			}
 		}
 
-		if( !( self::is_gravity_page('gf_entries') && isset( $formID ) && !self::is_gravity_page('gf_edit_forms') ) ) { return; }
+		if( !( self::is_gravity_page('gf_entries') && !self::is_gravity_page('gf_edit_forms') ) ) {
+			return;
+		}
+
+		if( ! isset( $formID ) ) {
+			return;
+		}
 
 		// Don't display on single entry view.
 		if( !empty( $_GET['view'] ) && $_GET['view'] === 'entry' ) {
@@ -131,19 +144,15 @@ class GFDirectory_EditForm {
 		}
 		</style>
 		<script>
-
 			<?php
-
-			//$formID = RGForms::get("id");
 
 	        if(empty($formID)) {
 		        $forms = RGFormsModel::get_forms(null, "title");
 	            $formID = $forms[0]->id;
 	        }
 
-		   	$_gform_directory_approvedcolumn = empty($_gform_directory_approvedcolumn) ? GFDirectory::globals_get_approved_column($formID) : $_gform_directory_approvedcolumn;
+		   	$approvedcolumn = GFDirectory::globals_get_approved_column( $formID );
 
-			if(!empty($_gform_directory_approvedcolumn)) {
 			    echo 'formID = '.$formID.';';
 		       ?>
 
@@ -157,7 +166,9 @@ class GFDirectory_EditForm {
 		        mysack.setVar( "form_id", formID);
 		        mysack.setVar( "approved", approved);
 		        mysack.encVar( "cookie", document.cookie, false );
-		        mysack.onError = function() { console.log('<?php echo esc_js(__("Ajax error while setting lead approval", "gravity-forms-addons")) ?>' )};
+		        mysack.onError = function() {
+		            console.log('<?php echo esc_js(__("Ajax error while setting lead approval", "gravity-forms-addons")) ?>' );
+		        };
 		        mysack.runAJAX();
 
 		        return true;
@@ -175,7 +186,8 @@ class GFDirectory_EditForm {
                 jQuery(messageBox).prependTo(container).slideDown();
 
                 if(messageClass == 'updated')
-                    messageTimeout = setTimeout(function(){ hideMessage(container, false); }, 10000);
+                    {messageTimeout = setTimeout(function(){ hideMessage(container, false); }, 10000);
+}
 
             }
 
@@ -184,9 +196,10 @@ class GFDirectory_EditForm {
                 var messageBox = jQuery(container).find('.message');
 
                 if(messageQueued)
-                    jQuery(messageBox).remove();
-                else
-                    jQuery(messageBox).slideUp(function(){ jQuery(this).remove(); });
+                    {jQuery(messageBox).remove();
+}else
+                    {jQuery(messageBox).slideUp(function(){ jQuery(this).remove(); });
+}
 
             }
 
@@ -195,10 +208,8 @@ class GFDirectory_EditForm {
 			jQuery(document).ready(function($) {
 
 		    	<?php if(!empty($process_bulk_update_message)) { ?>
-			    	displayMessage('<?php echo esc_js($process_bulk_update_message); ?>', 'updated', '#lead_form');
+			    	displayMessage('<?php echo esc_js($process_bulk_update_message); ?>', 'updated', '.gf_entries');
 			    <?php } ?>
-
-		    	$("#bulk_action,#bulk_action2").append('<optgroup label="Directory"><option value="approve-'+formID+'"><?php echo esc_js( __('Approve', 'gravity-forms-addons')); ?></option><option value="unapprove-'+formID+'"><?php echo esc_js( __('Disapprove', 'gravity-forms-addons')); ?></option></optgroup>');
 
 		    	var approveTitle = '<?php echo esc_js( __('Entry not approved for directory viewing. Click to approve this entry.', 'gravity-forms-addons')); ?>';
 		    	var unapproveTitle = '<?php echo esc_js( __('Entry approved for directory viewing. Click to disapprove this entry.', 'gravity-forms-addons')); ?>';
@@ -209,49 +220,79 @@ class GFDirectory_EditForm {
 		    		var $tr = $(this).parents('tr');
 					var is_approved = $tr.is(".lead_approved");
 
-					if(e.type == 'click') {
+					if(e.type === 'click') {
 				        $tr.toggleClass("lead_approved");
 				    }
 
 					// Update the title and screen-reader text
-			        if(!is_approved) { $(this).text('X').prop('title', unapproveTitle); }
-			        else { $(this).text('O').prop('title', approveTitle); }
+			        if(!is_approved) {
+						$(this).text('X').prop('title', unapproveTitle);
+					} else {
+						$(this).text('O').prop('title', approveTitle);
+					}
 
 					if(e.type == 'click') {
 				        UpdateApproved($('th input[type="checkbox"]', $tr).val(), is_approved ? 0 : 'Approved');
 				    }
 
-					UpdateApprovedColumns($(this).parents('table'), false);
+					UpdateApprovedColumns($(this).parents('table.gf_entries'), false);
 
 					return false;
-
 		    	});
 
 		    	// We want to make sure that the checkboxes go away even if the Approved column is showing.
 		    	// They will be in sync when loaded, so only upon click will we process.
 		    	function UpdateApprovedColumns($table, onLoad) {
-					var colIndex = $('th:contains("Approved")', $table).index() - 1;
+
+		    		<?php
+
+		    		if( ! empty( $approvedcolumn ) ) {
+		    		   /** @see https://stackoverflow.com/a/350300/480856 */
+		    		   $approved_column_jquery = str_replace( '.', '\\\.', $approvedcolumn );
+		    		   $approved_column_jquery = 'field_id-' . esc_html( $approved_column_jquery );
+
+		    		?>
 
 					$('tr', $table).each(function() {
-						if($(this).is('.lead_approved') || (onLoad && $("input.lead_approved", $(this)).length > 0)) {
-							if(onLoad && $(this).not('.lead_approved')) { $(this).addClass('lead_approved'); }
-							$('td:visible:eq('+colIndex+'):has(.toggleApproved)', $(this)).html("<img src='<?php echo plugins_url('images/tick.png', __FILE__); ?>/>");
+
+						// No GF approval; don't modify things
+						if( 0 === $( '.toggleApproved', $( this ) ).length ) {
+							return;
+						}
+
+						if( $(this).is('.lead_approved') || (onLoad && $("input.lead_approved", $(this)).length > 0)) {
+
+							if(onLoad && $(this).not('.lead_approved')) {
+								$(this).addClass('lead_approved');
+							}
+
+							$('td.column-<?php echo $approved_column_jquery; ?>:visible', $(this)).html('<i class="fa fa-check gf_valid"></i>');
+
 						} else {
-							if(onLoad && $(this).is('.lead_approved')) { $(this).removeClass('lead_approved'); }
-							$('td:visible:eq('+colIndex+'):has(.toggleApproved)', $(this)).html('');
+
+							if(onLoad && $(this).is('.lead_approved')) {
+								$(this).removeClass('lead_approved');
+							}
+
+							$('td.column-<?php echo $approved_column_jquery; ?>:visible', $(this)).html('');
 						}
 					});
+					<?php
+					}
+					?>
 		    	}
 
-		    	$('td:has(img[src*="star"])').after('<td><a href="#" class="toggleApproved" title="'+approveTitle+'">X</a></td>');
-		    	$('th.check-column:eq(1)').after('<th class="manage-column column-cb check-column"><a href="<?php echo esc_url( add_query_arg(array('sort' => $_gform_directory_approvedcolumn)) ); ?>"><img src="<?php echo plugins_url( '/images/form-button-1.png', __FILE__); ?>" style="text-align:center; margin:0 auto; display:block;" title="<?php echo esc_js( __('Show entry in directory view?', 'gravity-forms-addons')); ?>" /></span></a></th>');
+				// Add the header column
+		    	$('thead .column-is_starred, tfoot .column-is_starred').after('<th class="manage-column column-is_starred sortable"><a href="<?php echo esc_url( add_query_arg(array('sort' => $approvedcolumn)) ); ?>"><img src="<?php echo plugins_url( '/images/form-button-1.png', __FILE__); ?>" title="<?php echo esc_js( __('Show entry in directory view?', 'gravity-forms-addons')); ?>" /></span></a></th>');
+
+				// Add to each row
+		    	$('tbody th:has(img[src*="star"])').after('<td><a href="#" class="toggleApproved" title="'+approveTitle+'">X</a></td>');
 
 		    	$('tr:has(input.lead_approved)').addClass('lead_approved').find('a.toggleApproved').prop('title', unapproveTitle).text('O');
 
-		    	UpdateApprovedColumns($('table'), true);
+		    	UpdateApprovedColumns($('table.gf_entries'), true);
 
 		    });
-			<?php } // end if(!empty($_gform_directory_approvedcolumn)) check ?>
 		</script><?php
 	}
 
@@ -316,12 +357,51 @@ class GFDirectory_EditForm {
 		<?php endif;
 	}
 
-	public function toolbar_links() {
+	/**
+     * Add "Directory Columns" item to GF toolbar in GF 2.0+
+     *
+	 * @param array $menu_items Menu items in GF toolbar
+	 * @param int $form_id Form ID
+	 *
+	 * @return array
+	 */
+	function toolbar_menu_item( $menu_items = array(), $form_id = 0 ) {
+
 		wp_enqueue_style( 'thickbox' );
+
+		$entries_capabilities = array(
+			'gravityforms_view_entries',
+			'gravityforms_edit_entries',
+			'gravityforms_delete_entries'
+		);
+
+		$menu_items['directory_columns'] = array(
+			'label'        => __('Directory Columns', 'gravity-forms-addons'),
+			'icon'         => '<i class="dashicons dashicons-welcome-widgets-menus" style="line-height:17px"></i>',
+			'title'        => __('Modify Gravity Forms Directory Columns', 'gravity-forms-addons'),
+			'url'          => sprintf( '?gf_page=directory_columns&id=%d&add=entry&TB_iframe=true&height=600&width=700', $form_id ),
+			'menu_class'   => 'gf_form_toolbar_directory',
+			'link_class'   => 'thickbox',
+			'capabilities' => $entries_capabilities,
+			'priority'     => 200,
+		);
+
+		return $menu_items;
+	}
+
+	/**
+	* Add "Directory Columns" link to GF toolbar. No longer used after 2.0
+    * @see toolbar_menu_item
+    * @return void
+	*/
+	public function toolbar_links() {
+
+		wp_enqueue_style( 'thickbox' );
+		
 	?>
 	    <script type='text/javascript'>
 	    	jQuery(document).ready(function($) {
-	    		var url = '<?php echo add_query_arg(array('gf_page' => 'directory_columns', 'id' => @$_GET['id'], 'TB_iframe' => 'true', 'height' => 600, 'width' => 700), admin_url()); ?>';
+	    		var url = '<?php echo esc_url_raw( add_query_arg(array('gf_page' => 'directory_columns', 'id' => intval( $_GET['id'] ), 'TB_iframe' => 'true', 'height' => 600, 'width' => 700), admin_url()) ); ?>';
 	    		$link = $('<li class="gf_form_toolbar_preview gf_form_toolbar_directory" id="gf_form_toolbar_directory"><a href="'+url+'" class="thickbox" title="<?php echo esc_js(__('Modify Gravity Forms Directory Columns', 'gravity-forms-addons')); ?>"><i class="dashicons dashicons-welcome-widgets-menus" style="line-height:17px"></i> <?php echo esc_js( __('Directory Columns', 'gravity-forms-addons')); ?></a></li>');
 	    		$('#gf_form_toolbar_links').append($link);
 	    	});
@@ -498,19 +578,19 @@ class GFDirectory_EditForm {
 				array(
 					'class' => 'button',
 					'value' => esc_attr__('Approved', 'gravity-forms-addons'),
-					'onclick' => "StartAddField('directoryapproved');"
+					'onclick' => "StartAddField('directoryapproved');",
 				),
 				array(
 					'class' => 'button',
 					'value' => esc_attr__('Entry Link', 'gravity-forms-addons'),
-					'onclick' => "StartAddField('entrylink');"
+					'onclick' => "StartAddField('entrylink');",
 				),
 				array(
 					'class' => 'button',
 					'value' => esc_attr__('User Edit Link', 'gravity-forms-addons'),
-					'onclick' => "StartAddField('usereditlink');"
-				)
-			)
+					'onclick' => "StartAddField('usereditlink');",
+				),
+			),
 		);
 
 		array_push($field_groups, $directory_fields);

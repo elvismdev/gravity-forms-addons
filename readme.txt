@@ -1,21 +1,23 @@
 === Gravity Forms Directory ===
 Tags: gravity forms, gravity form, forms, gravity, form, directory, business, business directory, directorypress, classifieds, cforms, formidable, gravityview
-Requires at least: 3.3
-Tested up to: 4.2.2
-Stable tag: 3.7.2
+Requires at least: 4.0
+Tested up to: 4.9.4
+Stable tag: 4.1.3
 Contributors: katzwebdesign, katzwebservices
 License: GPLv2 or later
-Donate link: https://gravityview.co
+Donate link: https://gravityview.co/?utm_source=wordpress&utm_medium=readme&utm_campaign=donate
 
 Add directory capabilities and other functionality to the great Gravity Forms plugin.
 
 == Description ==
 
-> #### [GravityView](https://gravityview.co/) is the best way to display Gravity Forms entries
+### This plugin requires [Gravity Forms](https://katz.si/gravityforms)
+
+> #### [GravityView](https://gravityview.co/?utm_source=wordpress&utm_medium=readme&utm_campaign=readme) is the best way to display Gravity Forms entries
 >
-> We set out to make a better Directory plugin, and we did it: GravityView is a brand-new plugin that takes displaying your form entries to the next level. It is easier, more powerful and more customizable than the Directory plugin. If you like the Directory plugin, you'll *love* GravityView.
+> We set out to make a better Directory plugin, and we did it: GravityView takes displaying your form entries to the next level. It is easier, more powerful and more customizable than the Directory plugin. You'll *love* GravityView.
 > 
-> [Check out GravityView](https://gravityview.co/) or [try a demo](http://demo.gravityview.co) today!
+> [Check out GravityView](https://gravityview.co/?utm_source=wordpress&utm_medium=readme&utm_campaign=readme) or [try a demo](http://demo.gravityview.co?utm_source=wordpress&utm_medium=readme&utm_campaign=readme) today!
 
 ### Turn Gravity Forms into a Directory plugin
 
@@ -36,8 +38,10 @@ Gravity Forms is already the easiest form plugin...now, the Gravity Forms Direct
 * Define custom styles inside the shortcode
 * Includes lightbox support for uploaded images
 * Option to __view single entries__ in their own page or in a lightbox
+* Bulk Approve & Disapprove entries
 
 ####Insert a totally configurable table using the editor
+
 There are tons of configurable options for how you want the directory to display.
 
 ###Improve Gravity Forms Functionality and Usability
@@ -45,14 +49,6 @@ There are tons of configurable options for how you want the directory to display
 * Expand the Add Fields boxes to view all the boxes at once.
 * Edit form entries directly from the Entries page (saving two clicks)
 * Easily access form data to use in your website with PHP functions - [Learn more on the plugin's website](https://katz.co/gravity-forms-addons/)
-
-#### Other Gravity Forms Add-ons:
-
-* <a href="http://wordpress.org/extend/plugins/gravity-forms-salesforce/">Gravity Forms Salesforce Add-on</a> - Integrate Gravity Forms with Salesforce.com
-* <a href="http://wordpress.org/extend/plugins/gravity-forms-highrise/">Gravity Forms Highrise Add-on</a> - Integrate Gravity Forms with Highrise, a CRM
-* <a href="http://wordpress.org/extend/plugins/gravity-forms-constant-contact/">Gravity Forms + Constant Contact</a> - If you use Constant Contact and Gravity Forms, this plugin is for you.
-* <a href="http://wordpress.org/extend/plugins/gravity-forms-mad-mimi/">Gravity Forms Mad Mimi Add-on</a> - Integrate Mad Mimi, a great email marketing company, and Gravity Forms.
-* <a href="http://wordpress.org/extend/plugins/gravity-forms-exacttarget/">Gravity Forms ExactTarget Add-on</a> - Integrate with ExactTarget, an enterprise-class email marketing service
 
 #### Have an idea or issue with this Gravity Forms add-on plugin?
 
@@ -230,8 +226,83 @@ Since 3.6.3, the Directory plugin displays formatted values (like currency). To 
 
 `add_filter('kws_gf_directory_format_value', '__return_false' );`
 
+= Bulk Approval/Disapproval of entries doesn't work for me! =
+
+Since 4.1, Bulk Approval requires Gravity Forms 2.2.4 (released August 8, 2017). Please update your Gravity Forms.
+
+= There's an incorrect entry count when using Smart Approval =
+
+Since 4.1, Smart Approval may return inaccurate entry counts. This will be fixed automatically once Gravity Forms 2.3 is released and installed on your site.
 
 == Changelog ==
+
+= 4.1.2 & 4.1.3 on April 2, 2018 =
+
+* Fixed: Check whether a function exists that was introduced in Gravity Forms 2.2
+
+= 4.1.1 on March 30, 2018 =
+
+* Fixed: Searching entries using the global search would not filter entries
+* Fixed: Searches with a value of `0` would not filter entries
+
+= 4.1.0.1 on March 8, 2018 =
+
+* Removed test folders containing JSHint files, as suggested by WordPress.org
+
+= 4.1 on March 8, 2018 =
+
+* Fixed: No entries are visible when using Smart Approval
+    * The Directory may return inaccurate entry counts, but this will be fixed automatically once Gravity Forms 2.3 is released and installed on your site
+    * Sorry, but this was necessary!
+* Fixed: Approval column not showing when there was no Approval fields in the form
+* Bulk Approval updates
+    * This feature now requires Gravity Forms 2.2.4 (released August 8, 2017)
+    * Fixed: Approval now works when selecting all entries in a form
+* Fixed: Creating unreachable database rows when there are no Approval fields in a form
+
+= 4.0 on March 6, 2018 =
+
+A big update to make Gravity Forms Directory compatible with Gravity Forms 2.3, and to fix entry approval.
+
+**Gravity Forms Directory is not under active development.** We're focusing on [GravityView](https://gravityview.co), which is a way better plugin! Try it out for 30 days, if you don't like it, we'll give you your money back.
+
+**New:**
+
+- Compatible with Gravity Forms 2.3
+- Now requires Gravity Forms 2.2.3.12 or newer
+- Uses Gravity Forms API to fetch entries, instead of direct queries
+- Prevent access to unapproved single entries for users without permission
+
+**Fixed:**
+
+- "Edit" action links for entries work again
+- The ability to see the IDs for each field in an entry
+- Bulk Approve and Bulk Disapprove
+- Allow users with `gravityforms_edit_entries` capabilities to edit entries (previously, only users with `gravityforms_directory` capability)
+- Searching for `0` values
+
+**Improvements:**
+
+- Update code to use `GF_Field` instead of array
+- Remove calls to deprecated `get_currentuserinfo()` function
+- Remove unused code
+- Removed use of global variables
+- Added additional text & URL escaping
+- Update Google Maps links to use HTTPS
+- Security improvements
+
+= 3.8.1 on August 17, 2016 =
+* Fixed: Compatibility with Gravity Forms 2.0 Entries screen
+    - The "Directory Columns" menu returns to the toolbar
+    - Show the "Directory Columns" link when displaying the default form in the admin
+    - The "Approved" checkbox now does not break entries layout
+* Fixed: PHP warnings shown when configuring directory columns
+
+= 3.8 on December 10, 2015 =
+* Fixed: Gravity Forms 1.9.15 Entries screen conflict
+* Fixed: Post Category display included category ID
+* Fixed: Display of full Name, full Address, Checkbox, and Radio fields
+* Tested with WordPress 4.4
 
 = 3.7.2 and 3.7.3 on May 29 =
 * Fixed: Security issue with `add_query_arg()` function. **Please update!** [Learn about the issue](https://make.wordpress.org/plugins/2015/04/20/fixing-add_query_arg-and-remove_query_arg-usage/)
@@ -551,6 +622,19 @@ Note: This update has only been tested with WordPress 3.2 and Gravity Forms 1.5.
 
 
 == Upgrade Notice ==
+
+= 3.8.1 on August 17, 2016 =
+* Fixed: Compatibility with Gravity Forms 2.0 Entries screen
+    - The "Directory Columns" menu returns to the toolbar
+    - Show the "Directory Columns" link when displaying the default form in the admin
+    - The "Approved" checkbox now does not break entries layout
+* Fixed: PHP warnings shown when configuring directory columns
+
+= 3.8 on December 10, 2015 =
+* Fixed: Gravity Forms 1.9.15 Entries screen conflict
+* Fixed: Post Category display included category ID
+* Fixed: Display of full Name, full Address, Checkbox, and Radio fields
+* Tested with WordPress 4.4
 
 = 3.7 and 3.7.1 on December 17 = 
 * Fixed: Add `load_plugin_textdomain()` for translations
